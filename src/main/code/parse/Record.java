@@ -68,19 +68,25 @@ public class Record {
 		System.out.println("\n");
 	}
 	
-	public void validate() throws RecordValidationException {
+	public void validate() throws ValidationException {
 		if(getNumberOfEntries()!=0&&getNumberOfEntries()!=getReferences().size()) {
-			throw new RecordValidationException("Actual reference count not equal to expected count.");
+			throw new ValidationException("Actual reference count not equal to expected count.");
 		}
 		if(getLength()!=0&&getLength()!=getTotalMoved()) {
-			throw new RecordValidationException("Actual record size not equal to expected size.");
+			throw new ValidationException("Actual record size not equal to expected size.");
 		}
 	}
 	
 	public long getTotalMoved() {
 		return totalMoved;
 	}
+	
 	public void setTotalMoved(long totalMoved) {
 		this.totalMoved = totalMoved;
 	}
+	
+	public void increaseMovement(long readBytes) {
+		this.totalMoved = this.totalMoved + readBytes;
+	}
+	
 }
