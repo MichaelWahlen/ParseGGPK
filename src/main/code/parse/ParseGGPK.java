@@ -215,7 +215,7 @@ public class ParseGGPK {
 		}		
 	}
 	
-	public static void main(String[] args) throws ValidationException {	
+	public static void main(String[] args) throws ValidationException, IOException {	
 		ParseGGPK parse = new ParseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");
 		parse.parseGGPK();
 		DirectoryStructure structure = new DirectoryStructure(parse.getRecords());

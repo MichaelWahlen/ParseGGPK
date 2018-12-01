@@ -12,6 +12,7 @@ public class Record {
 	private int numberOfEntries = 0;
 	private List<Long> references = new ArrayList<Long>();
 	private long totalMoved = 0;
+	private String absoluteTargetFilePath;
 	
 	public String getTag() {
 		return tag;
@@ -87,6 +88,12 @@ public class Record {
 	
 	public void increaseMovement(long readBytes) {
 		this.totalMoved = this.totalMoved + readBytes;
+	}
+	public String getAbsoluteTargetFilePath() {
+		return absoluteTargetFilePath;
+	}
+	public void setAbsoluteTargetFilePath(String absoluteTargetFilePath) {
+		this.absoluteTargetFilePath = absoluteTargetFilePath;
 	}
 	
 }
