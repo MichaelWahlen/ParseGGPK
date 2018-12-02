@@ -13,6 +13,7 @@ public class Record {
 	private List<Long> references = new ArrayList<Long>();
 	private long totalMoved = 0;
 	private String absoluteTargetFilePath;
+	private long headerSize = 0;
 	
 	public String getTag() {
 		return tag;
@@ -61,11 +62,13 @@ public class Record {
 		System.out.println("Tag: "+getTag());
 		System.out.println("StartMarker: "+getStartMarker());
 		System.out.println("Next start marker:"+(getTotalMoved()+getStartMarker()));
-		System.out.println("Expected byte size: "+getLength());	
+		System.out.println("Header lock:"+getHeaderSize());	
+		System.out.println("Expected byte size: "+getLength());			
 		System.out.println("Actual processed byte size: "+getTotalMoved());	
 		System.out.println("Expected number of references: "+getNumberOfEntries());	
 		System.out.println("Actual found references: "+references.size());			
 		System.out.println("File or folder name: "+getName());	
+		System.out.println("Absolute path: "+getAbsoluteTargetFilePath());	
 		System.out.println("\n");
 	}
 	
@@ -94,6 +97,13 @@ public class Record {
 	}
 	public void setAbsoluteTargetFilePath(String absoluteTargetFilePath) {
 		this.absoluteTargetFilePath = absoluteTargetFilePath;
+	}
+	public long getHeaderSize() {
+		return headerSize;
+	}
+
+	public void lockHeaderSize() {
+		headerSize= totalMoved;
 	}
 	
 }

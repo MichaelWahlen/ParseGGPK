@@ -26,16 +26,11 @@ public class DirectoryStructure {
 					throw new ValidationException("Reference not found");	
 				}
 				if(foundReference.getTag().equals("PDIR")){					
-					
-					
 						String pdirName = "ROOT";
 						File rootDirectory = new File(file,pdirName);
 						rootDirectory.mkdir();						
-						foundReference.setAbsoluteTargetFilePath(rootDirectory.getAbsolutePath());
-						
-						recursionDirectory(foundReference);
-					
-					
+						foundReference.setAbsoluteTargetFilePath(rootDirectory.getAbsolutePath());						
+						recursionDirectory(foundReference);					
 				}
 			}
 		}
@@ -44,10 +39,15 @@ public class DirectoryStructure {
 	private void recursionDirectory(Record parentRecord) throws ValidationException, IOException {
 		List<Long> containedReferences = parentRecord.getReferences();
 		Map<Long, Record> records = getRecords();
+		
 		if(containedReferences.size()==0) {
 			
 		} else {
 			for(Long reference: containedReferences) {
+				if(reference==591405883L) {
+					System.out.println("BUG");
+				}
+				
 				Record foundRecord = records.get(reference);
 				if(foundRecord==null) {
 					throw new ValidationException("Reference not found");	
@@ -64,7 +64,7 @@ public class DirectoryStructure {
 						fileName = fileName.replaceAll("[^A-Za-z0-9.]", "");
 						File directory = new File(parentRecord.getAbsoluteTargetFilePath(),fileName);						
 						foundRecord.setAbsoluteTargetFilePath(directory.getAbsolutePath());
-						directory.createNewFile();
+						//directory.createNewFile();
 					}
 				}
 			}

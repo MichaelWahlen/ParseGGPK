@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ParseGGPK {	
 
@@ -15,6 +17,9 @@ public class ParseGGPK {
 	private boolean hasRecordConsolePrinting = false;
 	private boolean usesRecordValidation = true;	
 	private String absolutePathToBinaryFile;
+	private Set<Long> foundReferences = new HashSet<Long>();
+	private Set<Long> foundFileStartMarkers = new HashSet<Long>();
+	private Set<Long> missingReferences = new HashSet<Long>();
 	
 	public ParseGGPK(String fileLocation) {
 		this.absolutePathToBinaryFile = fileLocation;
@@ -101,10 +106,12 @@ public class ParseGGPK {
 	 */	
 	private void processGGPK(Record record,DataInputStream dataIn) throws IOException {
    	 	int numberOfRecords = readBytes(record,dataIn,4).getInt();
-   	 	record.setNumberOfEntries(numberOfRecords);		
+   	 	record.setNumberOfEntries(numberOfRecords);	
+   	 	record.lockHeaderSize();
    	 	for(int i = 0;i<numberOfRecords;i++) {
 	   		long rootReference = readBytes(record,dataIn,8).getLong();
-	   		record.addReference(rootReference);	   		
+	   		record.addReference(rootReference);	 
+	   	
    		}
 	}
 	
@@ -117,7 +124,9 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processFREE(Record record,DataInputStream dataIn) throws IOException {		
+		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8);
+		
 	}
 	
 	/**
@@ -135,8 +144,12 @@ public class ParseGGPK {
 	private void processFILE(Record record,DataInputStream dataIn) throws IOException {			
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
 		skipBytes(record,dataIn,32);		
-		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));		
+		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));	
+		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8-2*lengthOfName-32-2);
+		if(usesRecordValidation) {
+			foundFileStartMarkers.add(record.getStartMarker());
+   		}
 	}
 	
 	/**
@@ -159,9 +172,14 @@ public class ParseGGPK {
 		skipBytes(record,dataIn,32);
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));
 		skipBytes(record,dataIn,2);
+		record.lockHeaderSize();
 		for(int i = 0 ; i < totalEntryInDir;i++) {
 			skipBytes(record,dataIn,4);
-			record.addReference(readBytes(record,dataIn,8).getLong());
+			long reference = readBytes(record,dataIn,8).getLong();
+			record.addReference(reference);
+			if(usesRecordValidation) {
+	   			foundReferences.add(reference);
+	   		}
 		}
     	
 	}
@@ -209,6 +227,14 @@ public class ParseGGPK {
 		} finally {
 			try {
 				dataIn.close();
+				if(usesRecordValidation) {
+					Set<Long> missingReferences = getMissingReferences();
+					for(long reference:foundFileStartMarkers) {
+						if(!foundReferences.contains(reference)) {
+							missingReferences.add(reference);
+						}
+					}
+				}
 			} catch (IOException e) {				
 				e.printStackTrace();
 			}
@@ -216,10 +242,17 @@ public class ParseGGPK {
 	}
 	
 	public static void main(String[] args) throws ValidationException, IOException {	
-		ParseGGPK parse = new ParseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");
+		ParseGGPK parse = new ParseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");		
 		parse.parseGGPK();
 		DirectoryStructure structure = new DirectoryStructure(parse.getRecords());
 		structure.buildDirectoryStructure("C:\\ggpkextract");
+		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		Writer writer = new Writer(dataIn,parse.getRecords());
 	}
+
+	private Set<Long> getMissingReferences() {
+		return missingReferences;
+	}
+
 	
 }
