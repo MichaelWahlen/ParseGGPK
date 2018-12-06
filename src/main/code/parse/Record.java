@@ -14,6 +14,7 @@ public class Record {
 	private long totalMoved = 0;
 	private String absoluteTargetFilePath;
 	private long headerSize = 0;
+	private boolean hasPathSet = false;
 	
 	public String getTag() {
 		return tag;
@@ -92,12 +93,20 @@ public class Record {
 	public void increaseMovement(long readBytes) {
 		this.totalMoved = this.totalMoved + readBytes;
 	}
+	
 	public String getAbsoluteTargetFilePath() {
 		return absoluteTargetFilePath;
 	}
+	
 	public void setAbsoluteTargetFilePath(String absoluteTargetFilePath) {
 		this.absoluteTargetFilePath = absoluteTargetFilePath;
+		hasPathSet = true;
 	}
+	
+	public boolean hasPathSet() {
+		return hasPathSet;
+	}
+	
 	public long getHeaderSize() {
 		return headerSize;
 	}

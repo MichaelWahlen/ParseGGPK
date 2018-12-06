@@ -15,11 +15,10 @@ public class ParseGGPK {
 	private long markerLocation = 0;
 	private Map<Long, Record> records = new HashMap<Long, Record>();
 	private boolean hasRecordConsolePrinting = false;
-	private boolean usesRecordValidation = true;	
+	private boolean usesRecordValidation = false;	
 	private String absolutePathToBinaryFile;
 	private Set<Long> foundReferences = new HashSet<Long>();
 	private Set<Long> foundFileStartMarkers = new HashSet<Long>();
-	private Set<Long> missingReferences = new HashSet<Long>();
 	
 	public ParseGGPK(String fileLocation) {
 		this.absolutePathToBinaryFile = fileLocation;
@@ -110,9 +109,9 @@ public class ParseGGPK {
    	 	record.lockHeaderSize();
    	 	for(int i = 0;i<numberOfRecords;i++) {
 	   		long rootReference = readBytes(record,dataIn,8).getLong();
-	   		record.addReference(rootReference);	 
-	   	
+	   		record.addReference(rootReference);	   	
    		}
+
 	}
 	
 	/**
@@ -125,8 +124,7 @@ public class ParseGGPK {
 	 */	
 	private void processFREE(Record record,DataInputStream dataIn) throws IOException {		
 		record.lockHeaderSize();
-		skipBytes(record,dataIn,record.getLength()-8);
-		
+		skipBytes(record,dataIn,record.getLength()-8);		
 	}
 	
 	/**
@@ -147,6 +145,7 @@ public class ParseGGPK {
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));	
 		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8-2*lengthOfName-32-2);
+		// indicates whether a file starts at this location
 		if(usesRecordValidation) {
 			foundFileStartMarkers.add(record.getStartMarker());
    		}
@@ -172,11 +171,15 @@ public class ParseGGPK {
 		skipBytes(record,dataIn,32);
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));
 		skipBytes(record,dataIn,2);
-		record.lockHeaderSize();
+		record.lockHeaderSize();		
 		for(int i = 0 ; i < totalEntryInDir;i++) {
 			skipBytes(record,dataIn,4);
 			long reference = readBytes(record,dataIn,8).getLong();
 			record.addReference(reference);
+			// indicates whether a PDIR starts at this location
+			if(reference==591405883) {
+				System.out.println("found");
+			}
 			if(usesRecordValidation) {
 	   			foundReferences.add(reference);
 	   		}
@@ -228,12 +231,24 @@ public class ParseGGPK {
 			try {
 				dataIn.close();
 				if(usesRecordValidation) {
-					Set<Long> missingReferences = getMissingReferences();
+					Set<Long> missingReferences1 = new HashSet<Long>();
+					Set<Long> missingReferences2 = new HashSet<Long>();
 					for(long reference:foundFileStartMarkers) {
 						if(!foundReferences.contains(reference)) {
-							missingReferences.add(reference);
+							missingReferences1.add(reference);
+							Record notFoundRecord = records.get(reference);
+							System.out.println(notFoundRecord.getTag());
 						}
 					}
+					for(long reference:foundReferences) {
+						if(!foundFileStartMarkers.contains(reference)) {
+							missingReferences2.add(reference);
+							Record notFoundRecord = records.get(reference);
+							System.out.println(notFoundRecord.getTag());
+						}
+					}
+					System.out.println(" Marker not in reference: "+missingReferences1.size());
+					System.out.println(" Reference not in marker: "+missingReferences2.size());					
 				}
 			} catch (IOException e) {				
 				e.printStackTrace();
@@ -241,18 +256,9 @@ public class ParseGGPK {
 		}		
 	}
 	
-	public static void main(String[] args) throws ValidationException, IOException {	
-		ParseGGPK parse = new ParseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");		
-		parse.parseGGPK();
-		DirectoryStructure structure = new DirectoryStructure(parse.getRecords());
-		structure.buildDirectoryStructure("C:\\ggpkextract");
-		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		Writer writer = new Writer(dataIn,parse.getRecords());
-	}
 
-	private Set<Long> getMissingReferences() {
-		return missingReferences;
-	}
+
+
 
 	
 }

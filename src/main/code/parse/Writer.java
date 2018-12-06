@@ -19,8 +19,7 @@ public class Writer {
 
 	private void writeFiles() {
 		DataInputStream stream =  getReadStream();
-		Map<Long, Record> records = getRecordMap();
-	
+		Map<Long, Record> records = getRecordMap();	
 		for(Record record:records.values()) {
 			try{switch(record.getTag()) {
 			case "FILE":
@@ -45,10 +44,7 @@ public class Writer {
 			} catch(Exception e) {
 				record.printToConsole();
 			}
-		}
-			
-		
-		
+		}		
 	}
 
 
