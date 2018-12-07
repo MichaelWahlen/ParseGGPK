@@ -15,21 +15,10 @@ public class ParseGGPK {
 	private long markerLocation = 0;
 	private Map<Long, Record> records = new HashMap<Long, Record>();
 	private boolean hasRecordConsolePrinting = false;
-	private boolean usesRecordValidation = false;	
-	private String absolutePathToBinaryFile;
 	private Set<Long> foundReferences = new HashSet<Long>();
-	private Set<Long> foundFileStartMarkers = new HashSet<Long>();
-	
-	public ParseGGPK(String fileLocation) {
-		this.absolutePathToBinaryFile = fileLocation;
-	}
-	
+		
 	public Map<Long, Record> getRecords(){
 		return records;
-	}
-	
-	private String getAbsolutePathToBinaryFile() {
-		return absolutePathToBinaryFile;
 	}
 	
 	private long getMarkerLocation() {
@@ -40,23 +29,23 @@ public class ParseGGPK {
 	 * Increases the location of the position marker in the binary file, by the amount of processed bytes. <br>
 	 * Increases the total of read bytes as recorded with the record object. <br>
 	 * @param record the record that contains the extracted information for the current header + content lines in the binary file
-	 * @param movedPositions the number of moved positions
+	 * @param movedBytes the number of moved positions
 	 */
-	private void progressMarkerLocation(Record record,long movedPositions) {
-		markerLocation =  markerLocation + movedPositions;
-		record.increaseMovement(movedPositions);
+	private void moveBytes(Record record,long movedBytes) {
+		markerLocation =  markerLocation + movedBytes;
+		record.increaseMovement(movedBytes);
 	}
 	
 	/**
 	 * Skips n bytes and records the location after skipping, of the position marker in the binary file.
 	 * @param record the record that contains the extracted information for the current header + content lines in the binary file
 	 * @param stream stream that wraps the binary file that is being read
-	 * @param numberOfBytesToRead the number of bytes that should be skipped
+	 * @param skippedBytes the number of bytes that should be skipped
 	 * @throws IOException thrown if the data stream cannot be accessed
 	 */
-	private void skipBytes(Record record,DataInputStream stream, long numberOfBytesToRead) throws IOException {
-		stream.skip(numberOfBytesToRead);
-		progressMarkerLocation(record,numberOfBytesToRead);
+	private void skipBytes(Record record,DataInputStream stream, long skippedBytes) throws IOException {
+		stream.skip(skippedBytes);
+		moveBytes(record,skippedBytes);
 	}
 	
 	/**
@@ -67,10 +56,10 @@ public class ParseGGPK {
 	 * @return return the read binary data in the form of a ByteBuffer
 	 * @throws IOException thrown if the data stream cannot be accessed
 	 */
-	private ByteBuffer readBytes(Record record,DataInputStream stream, int numberOfBytesToRead) throws IOException {
-		progressMarkerLocation(record,numberOfBytesToRead);
+	private ByteBuffer readBytes(Record record, DataInputStream stream, int numberOfBytesToRead) throws IOException {		
 		byte[] bytesRead = new byte[numberOfBytesToRead];		
 		stream.readFully(bytesRead);
+		moveBytes(record,numberOfBytesToRead);		
 		return ByteBuffer.wrap(bytesRead).order(ByteOrder.LITTLE_ENDIAN);
 	}
 	
@@ -82,16 +71,7 @@ public class ParseGGPK {
 		records.put(record.getStartMarker(), record);
 		if(hasRecordConsolePrinting) {
 			record.printToConsole();			
-		}
-		if(usesRecordValidation) {
-			try {
-				record.validate();
-			} catch (ValidationException e) {
-				System.out.println(e.getMessage());		
-				e.printStackTrace();
-				System.exit(0);
-			}
-		}
+		}		
 	}
 	
 	/**
@@ -111,7 +91,6 @@ public class ParseGGPK {
 	   		long rootReference = readBytes(record,dataIn,8).getLong();
 	   		record.addReference(rootReference);	   	
    		}
-
 	}
 	
 	/**
@@ -142,13 +121,9 @@ public class ParseGGPK {
 	private void processFILE(Record record,DataInputStream dataIn) throws IOException {			
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
 		skipBytes(record,dataIn,32);		
-		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));	
+		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));	
 		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8-2*lengthOfName-32-2);
-		// indicates whether a file starts at this location
-		if(usesRecordValidation) {
-			foundFileStartMarkers.add(record.getStartMarker());
-   		}
 	}
 	
 	/**
@@ -169,22 +144,15 @@ public class ParseGGPK {
 		int totalEntryInDir = readBytes(record,dataIn,4).getInt();
 		record.setNumberOfEntries(totalEntryInDir);
 		skipBytes(record,dataIn,32);
-		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-8"));
+		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
 		skipBytes(record,dataIn,2);
-		record.lockHeaderSize();		
+		record.lockHeaderSize();	
 		for(int i = 0 ; i < totalEntryInDir;i++) {
 			skipBytes(record,dataIn,4);
 			long reference = readBytes(record,dataIn,8).getLong();
 			record.addReference(reference);
-			// indicates whether a PDIR starts at this location
-			if(reference==591405883) {
-				System.out.println("found");
-			}
-			if(usesRecordValidation) {
-	   			foundReferences.add(reference);
-	   		}
-		}
-    	
+			foundReferences.add(reference);
+		}    	
 	}
 	
 	
@@ -197,10 +165,10 @@ public class ParseGGPK {
 	 * Followed by a variable set of actual content. <br>
 	 * @param pathToFile absolute path to the GGPK file
 	 */	
-	public void parseGGPK() {
+	public void parseGGPK(String fileLocation) {
 		DataInputStream dataIn = null;
 		try {
-			 dataIn = new DataInputStream(new FileInputStream(getAbsolutePathToBinaryFile()));
+			 dataIn = new DataInputStream(new FileInputStream(fileLocation));
 			 while(dataIn.available()>0) {
 				Record record = new Record();			 	
 			 	record.setStartMarker(getMarkerLocation());			 	
@@ -230,25 +198,8 @@ public class ParseGGPK {
 		} finally {
 			try {
 				dataIn.close();
-				if(usesRecordValidation) {
-					Set<Long> missingReferences1 = new HashSet<Long>();
-					Set<Long> missingReferences2 = new HashSet<Long>();
-					for(long reference:foundFileStartMarkers) {
-						if(!foundReferences.contains(reference)) {
-							missingReferences1.add(reference);
-							Record notFoundRecord = records.get(reference);
-							System.out.println(notFoundRecord.getTag());
-						}
-					}
-					for(long reference:foundReferences) {
-						if(!foundFileStartMarkers.contains(reference)) {
-							missingReferences2.add(reference);
-							Record notFoundRecord = records.get(reference);
-							System.out.println(notFoundRecord.getTag());
-						}
-					}
-					System.out.println(" Marker not in reference: "+missingReferences1.size());
-					System.out.println(" Reference not in marker: "+missingReferences2.size());					
+				for(Long reference: foundReferences) {
+					records.get(reference).setHasReference(true);
 				}
 			} catch (IOException e) {				
 				e.printStackTrace();

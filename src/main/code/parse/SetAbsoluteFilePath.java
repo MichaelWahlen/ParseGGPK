@@ -17,46 +17,67 @@ public class SetAbsoluteFilePath {
 			}
 			if(foundReference.getTag().equals("PDIR")){					
 					String pdirName = "ROOT";
-					File rootDirectory = new File(file,pdirName);
-					rootDirectory.mkdir();						
+					File rootDirectory = new File(file,pdirName);								
 					foundReference.setAbsoluteTargetFilePath(rootDirectory.getAbsolutePath());						
 					recursionDirectory(foundReference, records);					
 			}
 		}
-		createPathForNotReferencedFiles(pathToDirectory, records);
+		setPathForFilesNotReferencedFromRoot(pathToDirectory, records);
 	}
 
-	private void createPathForNotReferencedFiles(String pathToDirectory, Map<Long, Record> records) {
-		File dumpFolder = new File(pathToDirectory,"DUMP");
-		for(Record record:records.values()) {
-			if(!record.hasPathSet()&&record.getTag().equals("FILE")) {
-				File filePath = new File(dumpFolder,record.getName().replaceAll("[^A-Za-z0-9.]", ""));
-				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
-			}
-		}
-		
-	}
+
 
 	private void recursionDirectory(Record parentRecord, Map<Long, Record> records) throws ValidationException, IOException {
 		List<Long> containedReferences = parentRecord.getReferences();		
 		if(containedReferences.size()!=0) {		
 			for(Long reference: containedReferences) {							
+				if(reference == 4575819607L) {
+					System.out.println("Stuff" );
+				}
 				Record foundRecord = records.get(reference);
 				if(foundRecord==null) {
 					throw new ValidationException("Reference not found");	
 				} else {
-					String name = foundRecord.getName().replaceAll("[^A-Za-z0-9.]", "");			
+					String name = foundRecord.getName();	
 					File directory = new File(parentRecord.getAbsoluteTargetFilePath(),name);						
 					foundRecord.setAbsoluteTargetFilePath(directory.getAbsolutePath());			
 					if(foundRecord.getTag().equals("PDIR")) {							
 						recursionDirectory(foundRecord,records);
-					} 
+					}
+					if(foundRecord.getTag().equals("FILE")) {	
+						foundRecord.setHasReference(true);
+					}
 				}
 			}
 		}
 	}
 
-	
+	private void setPathForFilesNotReferencedFromRoot(String pathToDirectory, Map<Long, Record> records) throws ValidationException, IOException {	
+		File rootFolder = new File(pathToDirectory,"NOTROOT");		
+		for(Record record:records.values()) {
+			if(!record.hasPathSet()&&!record.isHasReference()&&record.getTag().equals("PDIR")) {				
+				File filePath = new File(rootFolder,record.getName());
+				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
+				record.hasPathSet();
+				recursionDirectory(record, records);
+			}
+		}
+		setUnreferencedFiles(pathToDirectory, records);
+	}
+
+	private void setUnreferencedFiles(String pathToDirectory, Map<Long, Record> records) {
+		File unreferencedFolder = new File(pathToDirectory,"UNREFERENCED");		
+		long count = 0;
+		for(Record record:records.values()) {
+			if(!record.hasPathSet()&&record.getTag().equals("FILE")) {
+				File filePath = new File(unreferencedFolder,record.getName());
+				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
+				record.hasPathSet();	
+				count++;
+			}
+		}
+		System.out.println("Orphaned files: " + count);
+	}
 	
 	
 }

@@ -1,5 +1,7 @@
 package main.code.datastructure;
 
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,31 +12,42 @@ import main.code.parse.Record;
 public class SingleCharNode implements TrieNode {
 	
 	private Map<Character, TrieNode> childNodes = new HashMap<Character, TrieNode>();
-	private boolean isStringEnd = false;
-	// referencing the item in the trie might be nice :)
+	private boolean isStringEnd = false;	
 	private Record record;
 	
 	public SingleCharNode() {
 		
 	}
-
+	
 	@Override
-	public void insertChars(char[] chars, int position) {
+	public void setRecord(Record record) {
+		this.record = record;		
+	}
+	
+	@Override
+	public Record getRecord() {
+		return record;
+	}
+	
+	@Override
+	public void insert(char[] chars, int position, Record record) {
 		char currentChar = chars[position];
 		TrieNode childNode = childNodes.get(currentChar);
 		if (childNode!=null) {
 			if(position+1==chars.length) {
 				childNode.markAsStringEnd();
+				childNode.setRecord(record);
 			} else {
-				childNode.insertChars(chars,position+1);
+				childNode.insert(chars,position+1,record);
 			}
 		} else {
 			childNode = new SingleCharNode();
 			childNodes.put(currentChar, childNode);
 			if(position+1==chars.length) {
 				childNode.markAsStringEnd();
+				childNode.setRecord(record);
 			} else {
-				childNode.insertChars(chars,position+1);
+				childNode.insert(chars,position+1,record);
 			}
 		}
 	}
@@ -47,28 +60,6 @@ public class SingleCharNode implements TrieNode {
 	@Override
 	public void markAsStringEnd() {
 		isStringEnd = true;
-	}
-
-	@Override
-	public boolean findPrefix(char[] prefix, int position) {
-		char currentChar = prefix[position];
-		boolean prefixFound = false;
-		if(position+1!=prefix.length) {
-			TrieNode foundChild = childNodes.get(currentChar);
-			if(foundChild==null||foundChild.isStringEnd()) {				
-				prefixFound = false;
-			} else {
-				prefixFound = foundChild.findPrefix(prefix, position+1);
-			}
-		} else if (position+1==prefix.length) {
-			TrieNode foundChild = childNodes.get(currentChar);
-			if(foundChild==null) {
-				prefixFound = false;
-			} else {
-				prefixFound = true;
-			}
-		}		
-		return prefixFound;
 	}
 
 	@Override
@@ -89,15 +80,31 @@ public class SingleCharNode implements TrieNode {
 				foundChild.findStringsWithPrefix(prefix, position+1,currentString,holderList);
 			}
 		} else {
-			for(Entry<Character, TrieNode> node:childNodes.entrySet()) {
-				currentString = currentString + node.getKey();
+			for(Entry<Character, TrieNode> node:childNodes.entrySet()) {				
 				if(node.getValue().isStringEnd()) {
-					holderList.add(currentString);
+					String localString = currentString + node.getKey();
+					holderList.add(localString);
 				}
-				node.getValue().findStringsWithPrefix(prefix, position+1,currentString,holderList);
+				node.getValue().findStringsWithPrefix(prefix, position+1,currentString + node.getKey(),holderList);
 			}
 		}		
 	}
+
+	@Override
+	public void write(char[] chars, int position, DataInputStream dataIn) throws IOException {
+		if(chars.length==position) {		
+			if(isStringEnd) {
+				record.write(dataIn);
+			}
+		} else {
+			TrieNode child = childNodes.get(chars[position]);
+			if(child!=null) {
+				child.write(chars,position+1,dataIn);
+			} 
+		}
+	}
+
+
 
 
 }
