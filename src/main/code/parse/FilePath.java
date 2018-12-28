@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class SetAbsoluteFilePath {
+public class FilePath {
 	
 	public void setAbsolutePath(String pathToDirectory, Map<Long, Record> records) throws ValidationException, IOException {
 		File file = new File(pathToDirectory);
@@ -15,25 +15,18 @@ public class SetAbsoluteFilePath {
 			if(foundReference==null) {
 				throw new ValidationException("Reference not found");	
 			}
-			if(foundReference.getTag().equals("PDIR")){					
-					String pdirName = "ROOT";
-					File rootDirectory = new File(file,pdirName);								
-					foundReference.setAbsoluteTargetFilePath(rootDirectory.getAbsolutePath());						
+			if(foundReference.getTag().equals("PDIR")){										
+					foundReference.setAbsoluteTargetFilePath(new File(file,"ROOT").getAbsolutePath());						
 					recursionDirectory(foundReference, records);					
 			}
 		}
 		setPathForFilesNotReferencedFromRoot(pathToDirectory, records);
 	}
 
-
-
 	private void recursionDirectory(Record parentRecord, Map<Long, Record> records) throws ValidationException, IOException {
 		List<Long> containedReferences = parentRecord.getReferences();		
 		if(containedReferences.size()!=0) {		
 			for(Long reference: containedReferences) {							
-				if(reference == 4575819607L) {
-					System.out.println("Stuff" );
-				}
 				Record foundRecord = records.get(reference);
 				if(foundRecord==null) {
 					throw new ValidationException("Reference not found");	

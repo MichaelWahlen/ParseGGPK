@@ -1,40 +1,52 @@
 package main.code.datastructure;
 
-import java.io.DataInputStream;
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import main.code.parse.Record;
-
-public class TieTree {
+public class TieTree<T> {
 	
-	private TrieNode rootNode = new SingleCharNode();
+	private TrieNode<T> rootNode = new SingleCharNode<T>();
 
 	
 	public TieTree() {
 		
 	}
 	
-	public void addStrings(Map<String, Record> records) {		
-		for(Entry<String, Record> entry:records.entrySet()) {			
-			rootNode.insert(entry.getKey().toCharArray(),0,entry.getValue());	
-
+	public void addEntries(List<String> strings) {		
+		for(String string:strings) {			
+			if(string.length()>0) {
+				rootNode.insertKey(string.toCharArray(),0);	
+			}
 		}
 	}
 
+	public void addEntries(Map<String,T> map) {		
+		for(Entry<String,T> entry:map.entrySet()) {			
+			if(entry.getKey().length()>0) {
+				rootNode.insertKey(entry.getKey().toCharArray(),0,entry.getValue());	
+			}
+		}
+	}
 	
-	public List<String> getAllStrings(char[] prefix) {
+	public boolean findPrefix(String prefix) {		
+		boolean isPrefixFound = true;
+		if(getAllStrings(prefix).size()==0) {
+			isPrefixFound = false;
+		}		
+		return isPrefixFound;
+	}
+	
+	public List<String> getAllStrings(String prefix) {
 		List<String> returnList = new ArrayList<String>();
-		rootNode.findStringsWithPrefix(prefix,0, new String(), returnList);			
+		rootNode.findPrefixedKeys(prefix,0, returnList);			
 		return returnList;
 	}
 	
-	public void writeRecord(char[] chars, DataInputStream dataIn) throws IOException {
-		rootNode.write(chars,0, dataIn);
+	public T getObject(String key) {
+		return rootNode.findObject(key.toCharArray(), 0);		
 	}
 	
 }
-

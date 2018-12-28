@@ -1,110 +1,104 @@
 package main.code.datastructure;
 
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import main.code.parse.Record;
-
-public class SingleCharNode implements TrieNode {
+/**
+ * Class allows for a simple Tie Tree construction where Strings are deconstructed into their CHAR representation and then 
+ * @author LUPOTJ1
+ * @param <T> the type of object that might be contained in a key marked node
+ */
+public class SingleCharNode<T> implements TrieNode<T> {
 	
-	private Map<Character, TrieNode> childNodes = new HashMap<Character, TrieNode>();
-	private boolean isStringEnd = false;	
-	private Record record;
-	
-	public SingleCharNode() {
-		
-	}
-	
-	@Override
-	public void setRecord(Record record) {
-		this.record = record;		
-	}
+	private Map<Character, TrieNode<T>> childNodes = new HashMap<Character, TrieNode<T>>();
+	private boolean keyMarker = false;
+	private T leafObject = null;	
 	
 	@Override
-	public Record getRecord() {
-		return record;
-	}
-	
-	@Override
-	public void insert(char[] chars, int position, Record record) {
-		char currentChar = chars[position];
-		TrieNode childNode = childNodes.get(currentChar);
-		if (childNode!=null) {
-			if(position+1==chars.length) {
-				childNode.markAsStringEnd();
-				childNode.setRecord(record);
-			} else {
-				childNode.insert(chars,position+1,record);
-			}
+	public void insertKey(char[] characters, int charactersProcessed, T object) {
+		char currentCharacter = characters[charactersProcessed];
+		TrieNode<T> childNode = childNodes.get(currentCharacter);		
+		if (childNode==null) {
+			childNode = new SingleCharNode<T>();
+			childNodes.put(currentCharacter, childNode);
+		}		
+		if(charactersProcessed==characters.length-1) {
+			childNode.setEndMarker(true);
+			childNode.setObject(object);
 		} else {
-			childNode = new SingleCharNode();
-			childNodes.put(currentChar, childNode);
-			if(position+1==chars.length) {
-				childNode.markAsStringEnd();
-				childNode.setRecord(record);
-			} else {
-				childNode.insert(chars,position+1,record);
-			}
-		}
-	}
-
-	@Override
-	public boolean isStringEnd() {		
-		return isStringEnd;
-	}
-	
-	@Override
-	public void markAsStringEnd() {
-		isStringEnd = true;
-	}
-
-	@Override
-	public void findStringsWithPrefix(char[] prefix, int position, String currentString, List<String> holderList) {		
-		if(prefix.length>position+1) {
-			TrieNode foundChild = childNodes.get(prefix[position]);
-			if(foundChild!=null) {			
-				currentString = currentString + prefix[position];
-				foundChild.findStringsWithPrefix(prefix, position+1,currentString,holderList);
-			}
-		} else if (prefix.length==position+1){
-			TrieNode foundChild = childNodes.get(prefix[position]);
-			if(foundChild!=null) {					
-				currentString = currentString + prefix[position];
-				if(foundChild.isStringEnd()) {
-					holderList.add(currentString);
-				}
-				foundChild.findStringsWithPrefix(prefix, position+1,currentString,holderList);
-			}
-		} else {
-			for(Entry<Character, TrieNode> node:childNodes.entrySet()) {				
-				if(node.getValue().isStringEnd()) {
-					String localString = currentString + node.getKey();
-					holderList.add(localString);
-				}
-				node.getValue().findStringsWithPrefix(prefix, position+1,currentString + node.getKey(),holderList);
-			}
+			charactersProcessed++;
+			childNode.insertKey(characters,charactersProcessed,object);
 		}		
 	}
-
+	
 	@Override
-	public void write(char[] chars, int position, DataInputStream dataIn) throws IOException {
-		if(chars.length==position) {		
-			if(isStringEnd) {
-				record.write(dataIn);
-			}
-		} else {
-			TrieNode child = childNodes.get(chars[position]);
-			if(child!=null) {
-				child.write(chars,position+1,dataIn);
-			} 
-		}
+	public void insertKey(char[] characters, int position) {
+		insertKey(characters,position, null);
 	}
 
+	@Override
+	public void findPrefixedKeys(String prefix, int prefixPositionsChecked, List<String> prefixedKeys) {		
+		if(prefixPositionsChecked+1<=prefix.length()) {
+			TrieNode<T> foundChild = childNodes.get(prefix.charAt(prefixPositionsChecked));
+			if(foundChild!=null) {				
+				if (prefixPositionsChecked==prefix.length()-1&&foundChild.hasEndMarker()){					
+					prefixedKeys.add(prefix);					
+				}
+				foundChild.findPrefixedKeys(prefix, prefixPositionsChecked+1,prefixedKeys);
+			}			
+		} else {
+			findStringsAfterPrefix(prefix,prefixedKeys);
+		}		
+	}
+	
+	@Override
+	public void findStringsAfterPrefix(String currentString, List<String> holderList) {
+		for(Entry<Character, TrieNode<T>> entry:childNodes.entrySet()) {
+			String tempString = new String(currentString) + entry.getKey();
+			TrieNode<T> foundChild = entry.getValue();
+			if(foundChild.hasEndMarker()) {
+				holderList.add(tempString);
+			}
+			foundChild.findStringsAfterPrefix(tempString,holderList);
+		}
+	}
+	
+	@Override
+	public T findObject(char[] key, int position) {		
+		T returnObject = null;
+		char currentCharacter = key[position];
+		TrieNode<T> childNode = childNodes.get(currentCharacter);	
+		if (childNode!=null) {
+			if(position==key.length-1&&childNode.hasEndMarker()) {
+				returnObject = childNode.getObject();
+			} else if (position<key.length-1){
+				position++;
+				returnObject = childNode.findObject(key,position);
+			}	
+		} 		
+		return returnObject;
+	}
 
+	@Override
+	public T getObject() {
+		return leafObject;		
+	}
+	
+	@Override
+	public void setObject(T leafObject) {
+		this.leafObject = leafObject;		
+	}
 
-
+	@Override
+	public void setEndMarker(boolean keyMarker) {
+		this.keyMarker = keyMarker;		
+	}
+	
+	@Override
+	public boolean hasEndMarker() {		
+		return keyMarker;
+	}
+	
 }

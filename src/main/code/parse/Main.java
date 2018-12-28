@@ -14,7 +14,7 @@ public class Main {
 		ParseGGPK parse = new ParseGGPK();		
 		parse.parseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");
 		Map<Long, Record> records  = parse.getRecords();
-		SetAbsoluteFilePath structure = new SetAbsoluteFilePath();
+		FilePath structure = new FilePath();
 		structure.setAbsolutePath("C:\\ggpkextract", records);
 		Map<String, Record> recordsByName  = new HashMap<String, Record>();
 		for(Record record:records.values()) {
@@ -22,14 +22,14 @@ public class Main {
 				recordsByName.put(record.getAbsoluteTargetFilePath(), record);				
 			}
 		}		
-		TieTree tree = new TieTree();
-		tree.addStrings(recordsByName);
-		for(String string:tree.getAllStrings(new String("C:\\ggpkextract\\ROOT\\Metadata").toCharArray())) {
-			System.out.println(string);
-		}
+		TieTree<Record> tree = new TieTree<Record>();
+		tree.addEntries(recordsByName);
 		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		tree.writeRecord(new String("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui").toCharArray(), dataIn);
-		tree.writeRecord(new String("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui").toCharArray(), dataIn);
+		System.out.println(tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui").getAbsoluteTargetFilePath());
+		System.out.println(tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui").getAbsoluteTargetFilePath());
+		tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui").write(dataIn);
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui").write(dataIn);
 	}
 
 }
