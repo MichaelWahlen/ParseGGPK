@@ -1,6 +1,7 @@
 package main.code.parse;
 
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import main.code.datastructure.TieTree;
 
 public class Main {
+	
 
 	public static void main(String[] args) throws ValidationException, IOException {	
 		ParseGGPK parse = new ParseGGPK();		
@@ -25,11 +27,12 @@ public class Main {
 		TieTree<Record> tree = new TieTree<Record>();
 		tree.addEntries(recordsByName);
 		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		System.out.println(tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui").getAbsoluteTargetFilePath());
-		System.out.println(tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui").getAbsoluteTargetFilePath());
-		tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui").write(dataIn);
+		BinaryWriter binaryWriter = new BinaryWriter();
+		Record retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui");
+		binaryWriter.write(retrievedA.getStartMarker(), retrievedA.getLength(), retrievedA.getHeaderSize(), dataIn, new File(retrievedA.getAbsoluteTargetFilePath()));
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui").write(dataIn);
+		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui");
+		binaryWriter.write(retrievedA.getStartMarker(), retrievedA.getLength(), retrievedA.getHeaderSize(), dataIn, new File(retrievedA.getAbsoluteTargetFilePath()));
 	}
 
 }

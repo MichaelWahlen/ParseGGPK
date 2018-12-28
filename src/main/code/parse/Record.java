@@ -1,9 +1,5 @@
 package main.code.parse;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,20 +102,6 @@ public class Record {
 	public void setAbsoluteTargetFilePath(String absoluteTargetFilePath) {
 		this.absoluteTargetFilePath = absoluteTargetFilePath;
 		hasDefinedFilePath = true;
-	}
-	
-	public void write(DataInputStream dataIn) throws IOException {
-		if(hasDefinedFilePath&&getTag().equals("FILE")) {
-			dataIn.skip(getStartMarker());
-			File file = new File(getAbsoluteTargetFilePath());
-			file.getParentFile().mkdirs();
-			file.createNewFile();
-			byte[] bytesRead = new byte[(int) (getLength()-getHeaderSize())];		
-			dataIn.readFully(bytesRead);
-			try (FileOutputStream fos = new FileOutputStream(file)) {
-				fos.write(bytesRead);					  
-			}
-		}
 	}
 	
 	public boolean hasPathSet() {
