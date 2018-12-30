@@ -94,7 +94,7 @@ class TieTreeTest {
 	@DisplayName("Finding true prefix and counting # of returned prefixed strings")
 	void test4() {
 		String prefix = "Dir";		
-		assertEquals(3, tree.getAllStrings(prefix).size());
+		assertEquals(3, tree.getPrefixedKeys(prefix).size());
 	}
 	
 	@Test
@@ -104,7 +104,7 @@ class TieTreeTest {
 		additionalStrings.add("Dirham");
 		tree.addEntries(additionalStrings);
 		String prefix = "Dir";		
-		assertEquals(4, tree.getAllStrings(prefix).size());
+		assertEquals(4, tree.getPrefixedKeys(prefix).size());
 	}
 	
 	@Test
@@ -125,7 +125,7 @@ class TieTreeTest {
 	@DisplayName("Finding a prefix when the prefix is a complete key, counting the # of returned values")
 	void test5() {
 		String prefix = "arag";		
-		assertEquals(3, tree.getAllStrings(prefix).size());
+		assertEquals(3, tree.getPrefixedKeys(prefix).size());
 	}
 	
 	@Test
@@ -139,25 +139,25 @@ class TieTreeTest {
 	@DisplayName("Not finding a prefix when the prefix is not added to the tree, checking the # of finds")
 	void test6() {
 		String prefix = "Arag";		
-		assertEquals(0, tree.getAllStrings(prefix).size());
+		assertEquals(0, tree.getPrefixedKeys(prefix).size());
 	}
 	
 	@Test
 	@DisplayName("Verifying if the returned prefixes keys are exactly the same as the prefixed keys entered into the tree")
 	void test91() {
 		String prefix = "Z";
-		assertTrue(tree.getAllStrings(prefix).contains("ZB111111"));
-		assertTrue(tree.getAllStrings(prefix).contains("ZA111111"));
-		assertTrue(tree.getAllStrings(prefix).contains("ZCA111111"));
-		assertTrue(tree.getAllStrings(prefix).contains("ZAA111111"));
-		assertEquals(4,tree.getAllStrings(prefix).size());
+		assertTrue(tree.getPrefixedKeys(prefix).contains("ZB111111"));
+		assertTrue(tree.getPrefixedKeys(prefix).contains("ZA111111"));
+		assertTrue(tree.getPrefixedKeys(prefix).contains("ZCA111111"));
+		assertTrue(tree.getPrefixedKeys(prefix).contains("ZAA111111"));
+		assertEquals(4,tree.getPrefixedKeys(prefix).size());
 	}
 	
 	@Test
 	@DisplayName("Not finding a prefix when the prefix is not added to the tree, checking the # of finds")
 	void test111() {
 		String prefix = "";	
-		assertEquals(25, tree.getAllStrings(prefix).size());
+		assertEquals(25, tree.getPrefixedKeys(prefix).size());
 	}
 	
 	
@@ -177,8 +177,8 @@ class TieTreeTest {
 		    randomlyAddedStrings.add(sb.toString());
 		}
 		tree.addEntries(randomlyAddedStrings);
-		assertTrue(25<=tree.getAllStrings("").size());	
-		assertTrue(25+timesToRun>=tree.getAllStrings("").size());
+		assertTrue(25<=tree.getPrefixedKeys("").size());	
+		assertTrue(25+timesToRun>=tree.getPrefixedKeys("").size());
 	}	
 	
 }

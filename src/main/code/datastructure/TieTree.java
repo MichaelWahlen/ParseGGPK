@@ -33,13 +33,13 @@ public class TieTree<T> {
 	
 	public boolean findPrefix(String prefix) {		
 		boolean isPrefixFound = true;
-		if(getAllStrings(prefix).size()==0) {
+		if(getPrefixedKeys(prefix).size()==0) {
 			isPrefixFound = false;
 		}		
 		return isPrefixFound;
 	}
 	
-	public List<String> getAllStrings(String prefix) {
+	public List<String> getPrefixedKeys(String prefix) {
 		List<String> returnList = new ArrayList<String>();
 		rootNode.findPrefixedKeys(prefix,0, returnList);			
 		return returnList;
