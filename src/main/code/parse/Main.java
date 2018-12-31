@@ -54,9 +54,15 @@ public class Main {
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
 		retrievedA = tree.getObject("C:\\ggpkextract\\NOTROOT\\FX\\Glow.dds");
 		binaryWriter.write(retrievedA, dataIn);
-		
-		
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\scrolling_hotmetal.dds");
+		binaryWriter.write(retrievedA, dataIn);
 
+		for(String key:tree.getPrefixedKeys("C:\\ggpkextract\\ROOT\\Art")) {
+			dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+			retrievedA = tree.getObject(key);
+			binaryWriter.write(retrievedA, dataIn);
+		}
 	
 	
 		// code to enable a tree overview that makes sense to the human eye
