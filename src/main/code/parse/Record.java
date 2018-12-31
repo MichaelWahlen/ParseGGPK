@@ -1,5 +1,6 @@
 package main.code.parse;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class Record {
 	private long headerSize = 0;
 	private boolean hasDefinedFilePath = false;
 	private boolean isReferenced = false;
+	private BigInteger hash;
 	
 	public String getTag() {
 		return tag;
@@ -70,7 +72,8 @@ public class Record {
 		System.out.println("Expected number of references: "+getNumberOfEntries());	
 		System.out.println("Actual found references: "+references.size());			
 		System.out.println("File or folder name: "+getName());	
-		System.out.println("Absolute path: "+getAbsoluteTargetFilePath());	
+		System.out.println("Absolute path: "+getAbsoluteTargetFilePath());
+		System.out.println("Hash: "+getHash());	
 		System.out.println("\n");
 	}
 	
@@ -120,6 +123,12 @@ public class Record {
 	}
 	public void setHasReference(boolean hasReference) {
 		this.isReferenced = hasReference;
+	}
+	public BigInteger getHash() {
+		return hash;
+	}
+	public void setHash(BigInteger hash) {
+		this.hash = hash;
 	}
 	
 }

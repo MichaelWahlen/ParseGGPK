@@ -9,6 +9,12 @@
 	    <artifactId>commons-compress</artifactId>
 	    <version>1.18</version>
 	</dependency>  
+	<!-- https://mvnrepository.com/artifact/org.brotli/dec -->
+	<dependency>
+	    <groupId>org.brotli</groupId>
+	    <artifactId>dec</artifactId>
+	    <version>0.1.2</version>
+	</dependency>
   </dependencies>  
   <build>
     <sourceDirectory>src</sourceDirectory>

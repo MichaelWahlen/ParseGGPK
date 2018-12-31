@@ -3,6 +3,7 @@ package main.code.parse;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
@@ -120,10 +121,11 @@ public class ParseGGPK {
 	 */	
 	private void processFILE(Record record,DataInputStream dataIn) throws IOException {			
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
-		skipBytes(record,dataIn,32);		
-		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));	
+		record.setHash(new BigInteger(readBytes(record,dataIn,32).array()));		
+		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
+		skipBytes(record,dataIn,2);
 		record.lockHeaderSize();
-		skipBytes(record,dataIn,record.getLength()-8-2*lengthOfName-32-2);
+		skipBytes(record,dataIn,record.getLength()-8-4-32-2*(lengthOfName-1)-2);
 	}
 	
 	/**
@@ -143,7 +145,7 @@ public class ParseGGPK {
 		int lengthOfName = readBytes(record,dataIn,4).getInt();
 		int totalEntryInDir = readBytes(record,dataIn,4).getInt();
 		record.setNumberOfEntries(totalEntryInDir);
-		skipBytes(record,dataIn,32);
+		record.setHash(new BigInteger(readBytes(record,dataIn,32).array()));		
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
 		skipBytes(record,dataIn,2);
 		record.lockHeaderSize();	
@@ -153,8 +155,7 @@ public class ParseGGPK {
 			record.addReference(reference);
 			foundReferences.add(reference);
 		}    	
-	}
-	
+	}	
 	
 	/**
 	 * Binary file is big endian (java expects little endian). This means that bit ordering needs to be swapped.<br>

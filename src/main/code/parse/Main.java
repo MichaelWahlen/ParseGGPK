@@ -38,10 +38,27 @@ public class Main {
 		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
 		BinaryWriter binaryWriter = new BinaryWriter();
 		Record retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui");
-		binaryWriter.write(retrievedA.getStartMarker(), retrievedA.getLength(), retrievedA.getHeaderSize(), dataIn, new File(retrievedA.getAbsoluteTargetFilePath()));
+		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
 		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui");
-		binaryWriter.write(retrievedA.getStartMarker(), retrievedA.getLength(), retrievedA.getHeaderSize(), dataIn, new File(retrievedA.getAbsoluteTargetFilePath()));
+		binaryWriter.write(retrievedA, dataIn);
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		retrievedA = tree.getObject("C:\\ggpkextract\\NOTROOT\\double_strike\\slash_base.dds");
+		binaryWriter.write(retrievedA, dataIn);
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\scrolling_blue_hotmetal.dds");
+		binaryWriter.write(retrievedA, dataIn);
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\particles\\Auras\\delve_league\\CrystalWall_colour.dds");
+		binaryWriter.write(retrievedA, dataIn);
+		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
+		retrievedA = tree.getObject("C:\\ggpkextract\\NOTROOT\\FX\\Glow.dds");
+		binaryWriter.write(retrievedA, dataIn);
+		
+		
+
+	
+	
 		// code to enable a tree overview that makes sense to the human eye
 		List<String> allKeys = tree.getPrefixedKeys("");
 		List<List<String>> deconstructedKeys = new ArrayList<List<String>>();
