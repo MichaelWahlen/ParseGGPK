@@ -85,7 +85,8 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processGGPK(Record record,DataInputStream dataIn) throws IOException {
-   	 	int numberOfRecords = readBytes(record,dataIn,4).getInt();
+		record.setTag(RecordTypes.ROOT);
+		int numberOfRecords = readBytes(record,dataIn,4).getInt();
    	 	record.setNumberOfEntries(numberOfRecords);	
    	 	record.lockHeaderSize();
    	 	for(int i = 0;i<numberOfRecords;i++) {
@@ -103,6 +104,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processFREE(Record record,DataInputStream dataIn) throws IOException {		
+		record.setTag(RecordTypes.FREE);
 		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8);		
 	}
@@ -120,6 +122,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processFILE(Record record,DataInputStream dataIn) throws IOException {			
+		record.setTag(RecordTypes.FILE);
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
 		record.setHash(new BigInteger(readBytes(record,dataIn,32).array()));		
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
@@ -142,6 +145,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processPDIR(Record record,DataInputStream dataIn) throws IOException {		
+		record.setTag(RecordTypes.DIRECTORY);
 		int lengthOfName = readBytes(record,dataIn,4).getInt();
 		int totalEntryInDir = readBytes(record,dataIn,4).getInt();
 		record.setNumberOfEntries(totalEntryInDir);
@@ -168,16 +172,17 @@ public class ParseGGPK {
 	 */	
 	public void parseGGPK(String fileLocation) {
 		DataInputStream dataIn = null;
+		
 		try {
 			 dataIn = new DataInputStream(new FileInputStream(fileLocation));
 			 while(dataIn.available()>0) {
 				Record record = new Record();			 	
 			 	record.setStartMarker(getMarkerLocation());			 	
 		        record.setLength(readBytes(record,dataIn,4).getInt());
-		        record.setTag(new String(readBytes(record,dataIn,4).array(), "UTF-8"));		        
-		 	    switch(record.getTag()) {
-		        case "GGPK": 
-			       	processGGPK(record,dataIn);		        	 
+		        String recordIndicator = new String(readBytes(record,dataIn,4).array(), "UTF-8");		        	        
+		 	    switch(recordIndicator) {
+		        case "GGPK" :			       	
+		        	processGGPK(record,dataIn);		        	 
 			        break;
 		        case "FREE":
 			        processFREE(record,dataIn);

@@ -15,7 +15,7 @@ public class FilePath {
 			if(foundReference==null) {
 				throw new ValidationException("Reference not found");	
 			}
-			if(foundReference.getTag().equals("PDIR")){										
+			if(foundReference.getTag()==RecordTypes.DIRECTORY){										
 					foundReference.setAbsoluteTargetFilePath(new File(file,"ROOT").getAbsolutePath());						
 					recursionDirectory(foundReference, records);					
 			}
@@ -34,10 +34,10 @@ public class FilePath {
 					String name = foundRecord.getName();	
 					File directory = new File(parentRecord.getAbsoluteTargetFilePath(),name);						
 					foundRecord.setAbsoluteTargetFilePath(directory.getAbsolutePath());			
-					if(foundRecord.getTag().equals("PDIR")) {							
+					if(foundRecord.getTag()==RecordTypes.DIRECTORY) {							
 						recursionDirectory(foundRecord,records);
 					}
-					if(foundRecord.getTag().equals("FILE")) {	
+					if(foundRecord.getTag()==RecordTypes.FILE) {	
 						foundRecord.setHasReference(true);
 					}
 				}
@@ -48,7 +48,7 @@ public class FilePath {
 	private void setPathForFilesNotReferencedFromRoot(String pathToDirectory, Map<Long, Record> records) throws ValidationException, IOException {	
 		File rootFolder = new File(pathToDirectory,"NOTROOT");		
 		for(Record record:records.values()) {
-			if(!record.hasPathSet()&&!record.isHasReference()&&record.getTag().equals("PDIR")) {				
+			if(!record.hasPathSet()&&!record.isHasReference()&&record.getTag()==RecordTypes.DIRECTORY) {				
 				File filePath = new File(rootFolder,record.getName());
 				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
 				record.hasPathSet();
@@ -62,7 +62,7 @@ public class FilePath {
 		File unreferencedFolder = new File(pathToDirectory,"UNREFERENCED");		
 		long count = 0;
 		for(Record record:records.values()) {
-			if(!record.hasPathSet()&&record.getTag().equals("FILE")) {
+			if(!record.hasPathSet()&&record.getTag()==RecordTypes.FILE) {
 				File filePath = new File(unreferencedFolder,record.getName());
 				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
 				record.hasPathSet();	

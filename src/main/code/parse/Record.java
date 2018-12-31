@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Record {
 	
-	private String tag = "Not set";
+	private RecordTypes recordType = RecordTypes.NOT_DEFINED;
 	private String name = "Not set";
 	private long startMarker = 0;
 	private long length = 0;
@@ -19,11 +19,11 @@ public class Record {
 	private boolean isReferenced = false;
 	private BigInteger hash;
 	
-	public String getTag() {
-		return tag;
+	public RecordTypes getTag() {
+		return recordType;
 	}
-	public void setTag(String tag) {
-		this.tag = tag;
+	public void setTag(RecordTypes tag) {
+		this.recordType = tag;
 	}
 	public String getName() {
 		return name;
