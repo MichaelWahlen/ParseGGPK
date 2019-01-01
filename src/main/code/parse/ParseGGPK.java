@@ -9,6 +9,12 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
+import main.code.record.Payload;
+import main.code.record.PayloadType;
+import main.code.record.Record;
+import main.code.record.RecordType;
+import main.code.utilities.StringUtilities;
+
 public class ParseGGPK {	
 
 	private long markerLocation = 0;
@@ -120,9 +126,19 @@ public class ParseGGPK {
 		record.setRecordType(RecordType.FILE);
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
 		record.setHash(new BigInteger(readBytes(record,dataIn,32).array()));		
-		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
+		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));		
 		skipBytes(record,dataIn,2);
 		record.lockHeaderSize();
+		switch(StringUtilities.findExtension(record.getName(),'.').toLowerCase()) {
+			case ".dds":
+				Payload payload = new Payload();
+				payload.setPayloadType(PayloadType.DDS);
+				payload.setByteOrder(ByteOrder.LITTLE_ENDIAN);
+				// here a lot of the functionality of the payload processing needs to come. It needs to be determined if the payload is a reference or a payload. If a payload, then whether or not it is compressed or not.
+				record.setPayload(payload);
+				break;
+			default:		 
+		}
 		skipBytes(record,dataIn,record.getLength()-8-4-32-2*(lengthOfName-1)-2);
 	}
 	

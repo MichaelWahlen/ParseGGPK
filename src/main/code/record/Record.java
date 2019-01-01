@@ -1,8 +1,10 @@
-package main.code.parse;
+package main.code.record;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+
+import main.code.parse.ValidationException;
 
 /**
  * Class holds all relevant meta information on the contained record in the GGPK file. <br>
@@ -23,6 +25,7 @@ public class Record {
 	private String absoluteTargetFilePath;
 	private long headerSize = 0;
 	private boolean hasDefinedFilePath = false;
+	private Payload payload = null;
 
 	private BigInteger hash;
 	
@@ -82,6 +85,7 @@ public class Record {
 		System.out.println("Absolute path: "+getAbsoluteTargetFilePath());
 		System.out.println("Hash: "+getHash());	
 		System.out.println("\n");
+		payload.printToConsole();
 	}
 	
 	public void validate() throws ValidationException {
@@ -125,8 +129,17 @@ public class Record {
 	public BigInteger getHash() {
 		return hash;
 	}
+	
 	public void setHash(BigInteger hash) {
 		this.hash = hash;
+	}
+	
+	public Payload getPayload() {
+		return payload;
+	}
+	
+	public void setPayload(Payload payload) {
+		this.payload = payload;
 	}
 	
 }

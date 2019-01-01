@@ -2,6 +2,9 @@ package main.code.parse;
 
 import java.util.Map;
 
+import main.code.record.Record;
+import main.code.record.RecordType;
+
 public class FilePath {
 	
 	private final String topLevelRootDirectoryName;

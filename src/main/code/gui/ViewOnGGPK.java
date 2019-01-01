@@ -17,12 +17,12 @@ public class ViewOnGGPK extends JFrame {
         tree = new JTree(root);
         JPanel mainPanel = new JPanel();
         JScrollPane scrollPane = new JScrollPane(tree);
-        scrollPane.setPreferredSize(new Dimension(1200,900));
+        scrollPane.setPreferredSize(new Dimension(1200,500));
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         mainPanel.add(scrollPane);
         this.add(mainPanel);      
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+       // this.setExtendedState(JFrame.MAXIMIZED_BOTH); 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle("Folder structure \"Path of Exile\"");        
         this.pack();

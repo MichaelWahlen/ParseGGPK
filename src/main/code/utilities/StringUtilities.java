@@ -37,5 +37,33 @@ public class StringUtilities {
 		}		
 		return stringBuilder.toString();
 	} 
+	
+	public static String findExtension(String sourceString, char extensionPrefix) {
+		char[] sourceChars = sourceString.toCharArray();
+		char[] targetChars = null;		
+		for(int i = sourceChars.length-1;i>=0;i--) {
+			if(sourceChars[i]==extensionPrefix) {
+				targetChars = new char[sourceChars.length-i];
+				System.arraycopy(sourceChars, i, targetChars, 0, sourceChars.length-i);	
+				break;
+			}
+		}		
+		if(targetChars==null) {
+			targetChars = new char[4];
+			targetChars[0] = 'n';
+			targetChars[1] = 'u';
+			targetChars[2] = 'l';
+			targetChars[3] = 'l';
+		}
+		
+		return new String(targetChars);		
+	}
+	
+	//as I do not want to make a JUNIT for this, for now a main to test :)
+	public static void main(String[] args) {
+		System.out.println(findExtension("bla.txt",'.'));
+		System.out.println(findExtension("blatxt",'.'));
+		System.out.println(findExtension("b.l.a.txt",'.'));
+	}
 
 }
