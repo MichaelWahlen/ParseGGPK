@@ -26,7 +26,7 @@ public class Main {
 		structure.setAbsolutePath("C:\\ggpkextract", records);
 		Map<String, Record> recordsByName  = new HashMap<String, Record>();
 		for(Record record:records.values()) {
-			if(record.getTag()==RecordTypes.FILE||record.getTag()==RecordTypes.DIRECTORY) {
+			if(record.getRecordType()==RecordType.FILE||record.getRecordType()==RecordType.DIRECTORY) {
 				recordsByName.put(record.getAbsoluteTargetFilePath(), record);				
 			}
 		}		

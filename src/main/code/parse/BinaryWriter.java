@@ -15,7 +15,7 @@ import org.brotli.dec.BrotliInputStream;
 public class BinaryWriter {
 	
 	public void write(Record retrievedA, DataInputStream dataIn) throws IOException,FileNotFoundException {
-		if(retrievedA.getTag()==RecordTypes.FILE) {
+		if(retrievedA.getRecordType()==RecordType.FILE) {
 			dataIn.skip(retrievedA.getStartMarker()+retrievedA.getHeaderSize());
 			File targetFile = new File(retrievedA.getAbsoluteTargetFilePath());
 			targetFile.getParentFile().mkdirs();		

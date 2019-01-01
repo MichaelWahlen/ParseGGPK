@@ -85,7 +85,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processGGPK(Record record,DataInputStream dataIn) throws IOException {
-		record.setTag(RecordTypes.ROOT);
+		record.setRecordType(RecordType.ROOT);
 		int numberOfRecords = readBytes(record,dataIn,4).getInt();
    	 	record.setNumberOfEntries(numberOfRecords);	
    	 	record.lockHeaderSize();
@@ -104,7 +104,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processFREE(Record record,DataInputStream dataIn) throws IOException {		
-		record.setTag(RecordTypes.FREE);
+		record.setRecordType(RecordType.FREE);
 		record.lockHeaderSize();
 		skipBytes(record,dataIn,record.getLength()-8);		
 	}
@@ -122,7 +122,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processFILE(Record record,DataInputStream dataIn) throws IOException {			
-		record.setTag(RecordTypes.FILE);
+		record.setRecordType(RecordType.FILE);
 		int lengthOfName = readBytes(record,dataIn,4).getInt();		
 		record.setHash(new BigInteger(readBytes(record,dataIn,32).array()));		
 		record.setName(new String(readBytes(record,dataIn,2*(lengthOfName-1)).array(), "UTF-16LE"));
@@ -145,7 +145,7 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processPDIR(Record record,DataInputStream dataIn) throws IOException {		
-		record.setTag(RecordTypes.DIRECTORY);
+		record.setRecordType(RecordType.DIRECTORY);
 		int lengthOfName = readBytes(record,dataIn,4).getInt();
 		int totalEntryInDir = readBytes(record,dataIn,4).getInt();
 		record.setNumberOfEntries(totalEntryInDir);
@@ -164,17 +164,14 @@ public class ParseGGPK {
 	/**
 	 * Binary file is big endian (java expects little endian). This means that bit ordering needs to be swapped.<br>
 	 * File structure consists of a repetition of headers followed by content<br>
-	 * Every header and content will be captured in a custom Record object<br>
+	 * Every header and content will be captured in a Record object<br>
 	 * Header consists of 4 bytes containing expected length of the header + content.<br>
 	 * Followed by 4 bytes containing the tag defining the actual type of the record, assumed to be in UTF-8.<br>
-	 * Followed by a variable set of actual content. <br>
+	 * Followed by the actual contents of the record (header and payload).<br>
 	 * @param pathToFile absolute path to the GGPK file
 	 */	
-	public void parseGGPK(String fileLocation) {
-		DataInputStream dataIn = null;
-		
-		try {
-			 dataIn = new DataInputStream(new FileInputStream(fileLocation));
+	public void parseGGPK(String fileLocation) {				
+		try (DataInputStream dataIn = new DataInputStream(new FileInputStream(fileLocation))) {			
 			 while(dataIn.available()>0) {
 				Record record = new Record();			 	
 			 	record.setStartMarker(getMarkerLocation());			 	
@@ -199,18 +196,13 @@ public class ParseGGPK {
 		        }
 		 	   addToRecords(record);
 		      }
-		} catch (IOException e) {			
-			e.printStackTrace();
-		} finally {
-			try {
-				dataIn.close();
+			 dataIn.close();
 				for(Long reference: foundReferences) {
 					records.get(reference).setHasReference(true);
 				}
-			} catch (IOException e) {				
-				e.printStackTrace();
-			}
-		}		
+		} catch (IOException e) {			
+			e.printStackTrace();
+		} 
 	}
 	
 }

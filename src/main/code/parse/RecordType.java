@@ -1,5 +1,5 @@
 package main.code.parse;
 
-public enum RecordTypes {
+public enum RecordType {
 	DIRECTORY, FILE, ROOT, FREE, NOT_DEFINED;	
 }

@@ -4,9 +4,16 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class holds all relevant meta information on the contained record in the GGPK file. <br>
+ * The actual payload (if any) is not contained in the record, as parsing the GGPK file would result in too much memory being occupied otherwise. <br>
+ * No actual processing takes place within the class, it functions as a container only.
+ * @author MichaelWahlen  
+ */
+
 public class Record {
 	
-	private RecordTypes recordType = RecordTypes.NOT_DEFINED;
+	private RecordType recordType = RecordType.NOT_DEFINED;
 	private String name = "Not set";
 	private long startMarker = 0;
 	private long length = 0;
@@ -19,11 +26,11 @@ public class Record {
 	private boolean isReferenced = false;
 	private BigInteger hash;
 	
-	public RecordTypes getTag() {
+	public RecordType getRecordType() {
 		return recordType;
 	}
-	public void setTag(RecordTypes tag) {
-		this.recordType = tag;
+	public void setRecordType(RecordType recordType) {
+		this.recordType = recordType;
 	}
 	public String getName() {
 		return name;
@@ -63,7 +70,7 @@ public class Record {
 	}
 	
 	public void printToConsole() {
-		System.out.println("Tag: "+getTag());
+		System.out.println("Tag: "+getRecordType());
 		System.out.println("StartMarker: "+getStartMarker());
 		System.out.println("Next start marker:"+(getTotalMoved()+getStartMarker()));
 		System.out.println("Header lock:"+getHeaderSize());	
