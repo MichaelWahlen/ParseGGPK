@@ -1,46 +1,53 @@
 package main.code.parse;
 
-import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 public class FilePath {
 	
-	private final String topLevelRootDirectoryName = "root";
-	private final String topLevelNotRootDirectoryName = "not_root";
+	private final String topLevelRootDirectoryName;
+	private final String topLevelNotRootDirectoryName;
 	
 	/**
-	 * Class serves to provide the GGPK records with their respective absolute path. <br>
+	 * Class used to provided records with their absolute location file path. Assumes a GGPK record structure of folders and files.
+	 * @param targetRootFolder top level directory path for all files that can be drilled down to from the GGPK root record
+	 * @param targetNonRootFolder top level directory path for all files that can not be drilled down to from GGPK root record
+	 */
+	public FilePath(String targetRootFolder, String targetNonRootFolder) {
+		topLevelRootDirectoryName = targetRootFolder;
+		topLevelNotRootDirectoryName = targetNonRootFolder;
+	}	
+	
+	/**
+	 * Method serves to provide the GGPK records with their respective absolute path. <br>
 	 * There are 3 separate cases that need to be considered: <br>
 	 * 1) All files that can be drilled down to from the GGPK root directory (GGPK record) <br>
 	 * 2) All files that cannot be found when drilling down from the GGPK root directory, but that do have a parent directory (PDIR record). <br>
 	 * 3) All remaining files that do not seem to have a parent directory. <br>
 	 * It's important to note that the first record in the provided record set/map is expected to be the root record (GGPK). <br>
 	 * Further note: As it known which treatment a record should get (out of the above 3), there are three complete cycles made through the entire set of records. <br>
-	 * This can be improved by removing the finalized records, but that would require a copy of the set, as the original set should remain intact.
+	 * This can be improved by removing the finalized records, but that would require a copy of the set, as the original set should remain intact. It would also create some concurrency issues that would need to be handled.
 	 * @param pathToTargetDirectory the target directory absolute file path, as String
 	 * @param records all records that need to be provided with an absolute path.
 	 * @throws ValidationException thrown when an assumption made about the provided record proofs false
 	 */
-	public void setAbsolutePath(String pathToTargetDirectory, Map<Long, Record> records) throws ValidationException {
-		File file = new File(pathToTargetDirectory);
+	public void setAbsolutePath(Map<Long, Record> records) throws ValidationException {
 		Record rootRecord = records.get(0L);
 		if(rootRecord.getRecordType()!=RecordType.ROOT) {
 			throw new ValidationException("First record in the map is not the ROOT record.");	
 		} else {
-			for(long reference:rootRecord.getReferences()) {
-				Record foundReference = records.get(reference);
+			for(long referenceKey:rootRecord.getReferences()) {
+				Record foundReference = records.get(referenceKey);
 				if(foundReference==null) {
 					throw new ValidationException("Reference in root record cannot be found");	
 				}
 				if(foundReference.getRecordType()==RecordType.DIRECTORY){										
-						foundReference.setAbsoluteTargetFilePath(new File(file,topLevelRootDirectoryName).getAbsolutePath());						
+						foundReference.setAbsoluteTargetFilePath(topLevelRootDirectoryName);						
 						recursionDirectory(foundReference, records);					
 				}
 			}
 		}	
 		// for all files and directories that are cannot be drilled down to from the root we use separate handling.
-		setRemainingPaths(pathToTargetDirectory, records);
+		setRemainingPaths(records);
 	}
 	
 	/**
@@ -48,28 +55,20 @@ public class FilePath {
 	 * This means that child-less directories are not provided with a path here.
 	 * @param parentRecord
 	 * @param records
-	 * @throws ValidationException
+	 * @throws ValidationException thrown is a file which is being referenced as contained in a directory, cannot be found
 	 */	
-	private void recursionDirectory(Record parentRecord, Map<Long, Record> records) throws ValidationException {
-		List<Long> containedReferences = parentRecord.getReferences();		
-		if(containedReferences.size()!=0) {		
-			for(Long reference: containedReferences) {							
-				Record foundRecord = records.get(reference);
-				if(foundRecord==null) {
-					throw new ValidationException("PDIR record with an reference file which cannot be retrieved.\n" + "Parent record name: "+parentRecord.getName());	
-				} else {
-					String name = foundRecord.getName();	
-					File directory = new File(parentRecord.getAbsoluteTargetFilePath(),name);						
-					foundRecord.setAbsoluteTargetFilePath(directory.getAbsolutePath());			
-					if(foundRecord.getRecordType()==RecordType.DIRECTORY) {							
-						recursionDirectory(foundRecord,records);
-					}
-					if(foundRecord.getRecordType()==RecordType.FILE) {	
-						foundRecord.setHasReference(true);
-					}
+	private void recursionDirectory(Record parentRecord, Map<Long, Record> records) throws ValidationException {	
+		for(Long referenceKey: parentRecord.getReferences()) {							
+			Record foundRecord = records.get(referenceKey);
+			if(foundRecord==null) {
+				throw new ValidationException("PDIR record with an reference file which cannot be retrieved.\n" + "Parent record name: "+parentRecord.getName());	
+			} else {						
+				foundRecord.setAbsoluteTargetFilePath(parentRecord.getAbsoluteTargetFilePath()+"\\"+foundRecord.getName());			
+				if(foundRecord.getRecordType()==RecordType.DIRECTORY) {							
+					recursionDirectory(foundRecord,records);
 				}
 			}
-		}
+		}	
 	}
 	
 	
@@ -78,13 +77,10 @@ public class FilePath {
 	 * @param pathToDirectory the target directory absolute file path, as String
 	 * @param records the parsed records
 	 */
-	private void setRemainingPaths(String pathToDirectory, Map<Long, Record> records) {	
-		File notRootTopLevelFolder = new File(pathToDirectory,topLevelNotRootDirectoryName);		
+	private void setRemainingPaths(Map<Long, Record> records) {	
 		for(Record record:records.values()) {
-			if(!record.hasPathSet()&&!record.isHasReference()&&record.getRecordType()==RecordType.DIRECTORY) {				
-				File filePath = new File(notRootTopLevelFolder,record.getName());
-				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
-				record.hasPathSet();
+			if(!record.hasPathSet()&&record.getRecordType()==RecordType.DIRECTORY) {				
+				record.setAbsoluteTargetFilePath(topLevelNotRootDirectoryName + "\\" + record.getName());				
 				try {
 					recursionDirectory(record, records);
 				} catch (ValidationException e) {					
@@ -93,7 +89,7 @@ public class FilePath {
 			}
 		}
 		// for all files that could not be provided with a parent directory, we use the following method
-		setUnreferencedFiles(pathToDirectory, records);
+		setUnreferencedFiles(records);
 	}
 	
 	
@@ -102,18 +98,12 @@ public class FilePath {
 	 * @param pathToDirectory the target directory absolute file path, as String
 	 * @param records the parsed records
 	 */
-	private void setUnreferencedFiles(String pathToDirectory, Map<Long, Record> records) {
-		File notRootTopLevelFolder = new File(pathToDirectory,topLevelNotRootDirectoryName);		
-		long count = 0;
+	private void setUnreferencedFiles(Map<Long, Record> records) {		
 		for(Record record:records.values()) {
-			if(!record.hasPathSet()&&record.getRecordType()==RecordType.FILE) {
-				File filePath = new File(notRootTopLevelFolder,record.getName());
-				record.setAbsoluteTargetFilePath(filePath.getAbsolutePath());
-				record.hasPathSet();	
-				count++;
+			if(!record.hasPathSet()&&record.getRecordType()==RecordType.FILE) {				
+				record.setAbsoluteTargetFilePath(topLevelNotRootDirectoryName + "\\" + record.getName());								
 			}
 		}
-		System.out.println("Orphaned files: " + count);
 	}
 	
 	

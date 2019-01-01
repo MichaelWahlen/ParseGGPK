@@ -7,16 +7,13 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class ParseGGPK {	
 
 	private long markerLocation = 0;
 	private Map<Long, Record> records = new HashMap<Long, Record>();
 	private boolean hasRecordConsolePrinting = false;
-	private Set<Long> foundReferences = new HashSet<Long>();
 		
 	public Map<Long, Record> getRecords(){
 		return records;
@@ -85,13 +82,11 @@ public class ParseGGPK {
 	 * @throws IOException thrown if file cannot be accessed
 	 */	
 	private void processGGPK(Record record,DataInputStream dataIn) throws IOException {
-		record.setRecordType(RecordType.ROOT);
-		int numberOfRecords = readBytes(record,dataIn,4).getInt();
-   	 	record.setNumberOfEntries(numberOfRecords);	
+		record.setRecordType(RecordType.ROOT);		
+   	 	record.setNumberOfEntries(readBytes(record,dataIn,4).getInt());	
    	 	record.lockHeaderSize();
-   	 	for(int i = 0;i<numberOfRecords;i++) {
-	   		long rootReference = readBytes(record,dataIn,8).getLong();
-	   		record.addReference(rootReference);	   	
+   	 	for(int i = 0;i<record.getNumberOfEntries();i++) {	   		
+	   		record.addReference(readBytes(record,dataIn,8).getLong());	   	
    		}
 	}
 	
@@ -155,9 +150,7 @@ public class ParseGGPK {
 		record.lockHeaderSize();	
 		for(int i = 0 ; i < totalEntryInDir;i++) {
 			skipBytes(record,dataIn,4);
-			long reference = readBytes(record,dataIn,8).getLong();
-			record.addReference(reference);
-			foundReferences.add(reference);
+			record.addReference(readBytes(record,dataIn,8).getLong());			
 		}    	
 	}	
 	
@@ -168,6 +161,7 @@ public class ParseGGPK {
 	 * Header consists of 4 bytes containing expected length of the header + content.<br>
 	 * Followed by 4 bytes containing the tag defining the actual type of the record, assumed to be in UTF-8.<br>
 	 * Followed by the actual contents of the record (header and payload).<br>
+	 * The tag determines the treatment of the record.
 	 * @param pathToFile absolute path to the GGPK file
 	 */	
 	public void parseGGPK(String fileLocation) {				
@@ -175,9 +169,8 @@ public class ParseGGPK {
 			 while(dataIn.available()>0) {
 				Record record = new Record();			 	
 			 	record.setStartMarker(getMarkerLocation());			 	
-		        record.setLength(readBytes(record,dataIn,4).getInt());
-		        String recordIndicator = new String(readBytes(record,dataIn,4).array(), "UTF-8");		        	        
-		 	    switch(recordIndicator) {
+		        record.setLength(readBytes(record,dataIn,4).getInt());		            
+		 	    switch(new String(readBytes(record,dataIn,4).array(), "UTF-8")) {
 		        case "GGPK" :			       	
 		        	processGGPK(record,dataIn);		        	 
 			        break;
@@ -196,10 +189,7 @@ public class ParseGGPK {
 		        }
 		 	   addToRecords(record);
 		      }
-			 dataIn.close();
-				for(Long reference: foundReferences) {
-					records.get(reference).setHasReference(true);
-				}
+			 dataIn.close();				
 		} catch (IOException e) {			
 			e.printStackTrace();
 		} 

@@ -14,16 +14,14 @@ import main.code.datastructure.TieTree;
 import main.code.gui.ViewOnGGPK;
 
 public class Main {
-	
-
 
 	public static void main(String[] args) throws ValidationException, IOException {	
 		long startTime = System.nanoTime();		
 		ParseGGPK parse = new ParseGGPK();		
 		parse.parseGGPK("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk");
 		Map<Long, Record> records  = parse.getRecords();
-		FilePath structure = new FilePath();
-		structure.setAbsolutePath("C:\\ggpkextract", records);
+		FilePath structure = new FilePath("C:\\ggpkextract\\root","C:\\ggpkextract\\not_root");
+		structure.setAbsolutePath(records);
 		Map<String, Record> recordsByName  = new HashMap<String, Record>();
 		for(Record record:records.values()) {
 			if(record.getRecordType()==RecordType.FILE||record.getRecordType()==RecordType.DIRECTORY) {
@@ -34,25 +32,25 @@ public class Main {
 		tree.addEntries(recordsByName);
 		DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
 		BinaryWriter binaryWriter = new BinaryWriter();
-		Record retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui");
+		Record retrievedA = tree.getObject("C:\\ggpkextract\\root\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui");
+		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\NOTROOT\\double_strike\\slash_base.dds");
+		retrievedA = tree.getObject("C:\\ggpkextract\\not_root\\double_strike\\slash_base.dds");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\scrolling_blue_hotmetal.dds");
+		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\scrolling_blue_hotmetal.dds");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\particles\\Auras\\delve_league\\CrystalWall_colour.dds");
+		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\particles\\Auras\\delve_league\\CrystalWall_colour.dds");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\NOTROOT\\FX\\Glow.dds");
+		retrievedA = tree.getObject("C:\\ggpkextract\\not_root\\FX\\Glow.dds");
 		binaryWriter.write(retrievedA, dataIn);
 		dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
-		retrievedA = tree.getObject("C:\\ggpkextract\\ROOT\\Art\\scrolling_hotmetal.dds");
+		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\scrolling_hotmetal.dds");
 		binaryWriter.write(retrievedA, dataIn);
 
 //		for(String key:tree.getPrefixedKeys("C:\\ggpkextract\\ROOT\\Art")) {

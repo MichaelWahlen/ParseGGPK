@@ -23,7 +23,7 @@ public class Record {
 	private String absoluteTargetFilePath;
 	private long headerSize = 0;
 	private boolean hasDefinedFilePath = false;
-	private boolean isReferenced = false;
+
 	private BigInteger hash;
 	
 	public RecordType getRecordType() {
@@ -93,12 +93,8 @@ public class Record {
 		}
 	}
 	
-	public long getTotalMoved() {
+	private long getTotalMoved() {
 		return totalMoved;
-	}
-	
-	public void setTotalMoved(long totalMoved) {
-		this.totalMoved = totalMoved;
 	}
 	
 	public void increaseMovement(long readBytes) {
@@ -125,12 +121,7 @@ public class Record {
 	public void lockHeaderSize() {
 		headerSize= totalMoved;
 	}
-	public boolean isHasReference() {
-		return isReferenced;
-	}
-	public void setHasReference(boolean hasReference) {
-		this.isReferenced = hasReference;
-	}
+
 	public BigInteger getHash() {
 		return hash;
 	}
