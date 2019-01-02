@@ -19,7 +19,7 @@ public class Main {
 	
 	public static void main(String[] args) throws ValidationException, IOException {	
 		long startTime = System.nanoTime();		
-		ParseGGPK parse = new ParseGGPK();		
+		GGPKHeaderParser parse = new GGPKHeaderParser();		
 		parse.parseGGPK(fileLocation);
 		Map<Long, Record> records  = parse.getRecords();
 		FilePath structure = new FilePath("C:\\ggpkextract\\root","C:\\ggpkextract\\not_root");
@@ -32,23 +32,27 @@ public class Main {
 		}		
 		TieTree<Record> tree = new TieTree<Record>();
 		tree.addEntries(recordsByName);
-		
+		List<Record> records2 = new ArrayList<Record>();
 		BinaryPayloadProcessor binaryWriter = new BinaryPayloadProcessor(fileLocation);
 		Record retrievedA = tree.getObject("C:\\ggpkextract\\root\\Metadata\\UI\\InGameState\\Tutorials\\longtext.ui");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Metadata\\UI\\InGameState\\HUD\\HUD.Tencent.ui");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\not_root\\double_strike\\slash_base.dds");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\scrolling_blue_hotmetal.dds");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\particles\\Auras\\delve_league\\CrystalWall_colour.dds");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\not_root\\FX\\Glow.dds");
-		binaryWriter.write(retrievedA);
+		records2.add(retrievedA);
 		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\scrolling_hotmetal.dds");
-		binaryWriter.write(retrievedA);
-
+		records2.add(retrievedA);	
+		retrievedA = tree.getObject("C:\\ggpkextract\\root\\Art\\2DArt\\Cubemaps\\Overcast01_diffuse.dds");
+		records2.add(retrievedA);		
+		binaryWriter.write(records2);
+		
+		
 //		for(String key:tree.getPrefixedKeys("C:\\ggpkextract\\ROOT\\Art")) {
 //			dataIn = new DataInputStream(new FileInputStream("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Path of Exile\\Content.ggpk"));
 //			retrievedA = tree.getObject(key);

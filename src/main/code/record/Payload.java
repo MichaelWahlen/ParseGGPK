@@ -8,14 +8,20 @@ public class Payload {
 	private ByteOrder byteOrder = null;
 	private CompressionType compressionType = CompressionType.NOT_DEFINED;
 	private long startBit = 0L;
-	private long length = 0L;
+	private int length = 0;
+	private int expectedDecompressedLength = 0;
+	private String targetPath = "";
 		
 	public Payload() {
 		
 	}
 	
 	public void printToConsole() {
-		System.out.println("payloadType: "+payloadType.getStringRepresentation());
+		System.out.println("Payload type: "+payloadType.getStringRepresentation());
+		System.out.println("Payload compression type: "+compressionType.getStringRepresentation());
+		System.out.println("Payload start bit: "+startBit);
+		System.out.println("Payload uncompressed length: "+length);
+		System.out.println("Payload expected decompressed length if applicable: "+expectedDecompressedLength);
 	}
 
 	public PayloadType getPayloadType() {
@@ -50,12 +56,28 @@ public class Payload {
 		this.startBit = startBit;
 	}
 
-	public long getLength() {
+	public int getLength() {
 		return length;
 	}
 
-	public void setLength(long length) {
+	public void setLength(int length) {
 		this.length = length;
+	}
+
+	public int getExpectedDecompressedLength() {
+		return expectedDecompressedLength;
+	}
+
+	public void setExpectedDecompressedLength(int expectedDecompressedLength) {
+		this.expectedDecompressedLength = expectedDecompressedLength;
+	}
+
+	public String getTargetPath() {
+		return targetPath;
+	}
+
+	public void setTargetPath(String targetPath) {
+		this.targetPath = targetPath;
 	}
 	
 }

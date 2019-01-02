@@ -22,10 +22,9 @@ public class Record {
 	private int numberOfEntries = 0;
 	private List<Long> references = new ArrayList<Long>();
 	private long totalMoved = 0;
-	private String absoluteTargetFilePath;
 	private long headerSize = 0;
 	private boolean hasDefinedFilePath = false;
-	private Payload payload = null;
+	private Payload payload = new Payload();
 
 	private BigInteger hash;
 	
@@ -41,7 +40,7 @@ public class Record {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public long getStartMarker() {
+	public long getStartBit() {
 		return startMarker;
 	}
 	public void setStartMarker(long startMarker) {
@@ -73,19 +72,16 @@ public class Record {
 	}
 	
 	public void printToConsole() {
-		System.out.println("Tag: "+getRecordType());
-		System.out.println("StartMarker: "+getStartMarker());
-		System.out.println("Next start marker:"+(getTotalMoved()+getStartMarker()));
-		System.out.println("Header lock:"+getHeaderSize());	
-		System.out.println("Expected byte size: "+getLength());			
-		System.out.println("Actual processed byte size: "+getTotalMoved());	
-		System.out.println("Expected number of references: "+getNumberOfEntries());	
-		System.out.println("Actual found references: "+references.size());			
-		System.out.println("File or folder name: "+getName());	
-		System.out.println("Absolute path: "+getAbsoluteTargetFilePath());
-		System.out.println("Hash: "+getHash());	
-		System.out.println("\n");
+		System.out.println("Record tag: "+getRecordType());
+		System.out.println("Record start bit: "+getStartBit());		
+		System.out.println("Record length: "+getLength());
+		System.out.println("Record header length: "+getHeaderSize());
+		System.out.println("Record expected entries: "+getNumberOfEntries());				
+		System.out.println("Record name: "+getName());	
+		System.out.println("Record target path: "+getAbsoluteTargetFilePath());
+		System.out.println("Record hash: "+getHash());		
 		payload.printToConsole();
+		System.out.println("---------------------------");
 	}
 	
 	public void validate() throws ValidationException {
@@ -106,11 +102,11 @@ public class Record {
 	}
 	
 	public String getAbsoluteTargetFilePath() {
-		return absoluteTargetFilePath;
+		return payload.getTargetPath();
 	}
 	
 	public void setAbsoluteTargetFilePath(String absoluteTargetFilePath) {
-		this.absoluteTargetFilePath = absoluteTargetFilePath;
+		payload.setTargetPath(absoluteTargetFilePath);
 		hasDefinedFilePath = true;
 	}
 	

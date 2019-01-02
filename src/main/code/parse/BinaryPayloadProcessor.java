@@ -7,15 +7,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import org.brotli.dec.BrotliInputStream;
-
 import main.code.record.Payload;
 import main.code.record.PayloadType;
 import main.code.record.Record;
-import main.code.record.RecordType;
-
-
 
 public class BinaryPayloadProcessor {
 	
@@ -29,49 +27,55 @@ public class BinaryPayloadProcessor {
 			throw new ValidationException("File at "+absoluteSourcePath+" cannot be opened.");
 		}
 	}
-	
-	public void write(Record record) throws IOException {		
-		if(record.getRecordType()==RecordType.FILE) {
-			DataInputStream dataIn = new DataInputStream(new FileInputStream(getSourceFile()));
-			dataIn.skip(record.getStartMarker()+record.getHeaderSize());
-			File targetFile = new File(record.getAbsoluteTargetFilePath());
-			targetFile.getParentFile().mkdirs();		
-			targetFile.createNewFile();		
-			Payload payload = record.getPayload();			
-			if(payload !=null && payload.getPayloadType() == PayloadType.DDS) {				
-				byte[] fullPayLoad = new byte[(int)(record.getLength()-record.getHeaderSize())];		
-				dataIn.readFully(fullPayLoad);			
-				byte[] brotliHeader = new byte[4];
-				System.arraycopy(fullPayLoad, 0, brotliHeader, 0, 4);			
-				byte[] shortHeader = new byte[1];
-				System.arraycopy(fullPayLoad, 0, shortHeader, 0, 1);				
-				if(new String(ByteBuffer.wrap(brotliHeader).order(ByteOrder.LITTLE_ENDIAN).array(),"UTF-8").equals("DDS ")) {
-					byte[] payLoad = new byte[(int)(record.getLength()-record.getHeaderSize())-4];
-					System.arraycopy(fullPayLoad, 4, payLoad, 0, payLoad.length);				
-					FileOutputStream outputStream = new FileOutputStream(targetFile);
-					outputStream.write(ByteBuffer.wrap(payLoad).order(ByteOrder.LITTLE_ENDIAN).array());
-					outputStream.close();
-				} else if(new String(ByteBuffer.wrap(shortHeader).order(ByteOrder.LITTLE_ENDIAN).array(),"UTF-8").equals("*")) {
-					byte[] payLoad = new byte[(int)(record.getLength()-record.getHeaderSize())-1];	
-					System.arraycopy(fullPayLoad, 1, payLoad, 0, payLoad.length);	
-					System.out.println("String: "+ new String(ByteBuffer.wrap(payLoad).order(ByteOrder.LITTLE_ENDIAN).array(),"UTF-8"));
-				} else {			
-					byte[] payLoad = new byte[(int)(record.getLength()-record.getHeaderSize())-4];				
-					System.arraycopy(fullPayLoad, 4, payLoad, 0, payLoad.length);				
-					int expectedBrotliSizeLittle = ByteBuffer.wrap(brotliHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
-					byte[] uncompressedLittleEndian = new byte[expectedBrotliSizeLittle];			
-					BrotliInputStream brotliLittleEndian = new BrotliInputStream(new ByteArrayInputStream(ByteBuffer.wrap(payLoad).order(ByteOrder.LITTLE_ENDIAN).array()));
-					brotliLittleEndian.read(uncompressedLittleEndian);			
-					brotliLittleEndian.close();
-					FileOutputStream outputStream = new FileOutputStream(targetFile);
-					outputStream.write(uncompressedLittleEndian);	
-					outputStream.close();
-				}
-			}
-			dataIn.close();
-		}
-	}
 
+	private void writeDDS(Payload payload, Long startBit, DataInputStream dataIn) throws IOException {				
+		File targetFile = new File(payload.getTargetPath());
+		targetFile.getParentFile().mkdirs();		
+		targetFile.createNewFile();				
+		if(payload !=null && payload.getPayloadType() == PayloadType.DDS) {				
+			dataIn.skip(startBit);
+			byte[] fullPayLoad = new byte[payload.getLength()];		
+			dataIn.readFully(fullPayLoad);	
+			FileOutputStream outputStream = new FileOutputStream(targetFile);
+			switch(payload.getCompressionType()) {
+				case NOT_COMPRESSED:
+					outputStream.write(ByteBuffer.wrap(fullPayLoad).order(payload.getByteOrder()).array());							
+					break;
+				case REFERENCE:
+					System.out.println("Found reference in DDS file: "+ new String(ByteBuffer.wrap(fullPayLoad).order(payload.getByteOrder()).array(),"UTF-8"));
+					break;
+				case BROTLI:
+					byte[] decompressedPayload = new byte[payload.getExpectedDecompressedLength()];			
+					BrotliInputStream brotliStream = new BrotliInputStream(new ByteArrayInputStream(ByteBuffer.wrap(fullPayLoad).order(payload.getByteOrder()).array()));
+					brotliStream.read(decompressedPayload);			
+					brotliStream.close();					
+					outputStream.write(decompressedPayload);	
+					break;
+				default:									
+			}
+			outputStream.close();				
+		}		
+	}
+	
+	public void write(List<Record> records) throws IOException {
+		Collections.sort(records, new Comparator<Record>() {
+		    @Override
+		    public int compare(Record o1, Record o2) {
+		        return ((Long) o1.getStartBit()).compareTo(o2.getStartBit());
+		    }
+		});
+		DataInputStream dataIn = new DataInputStream(new FileInputStream(getSourceFile()));
+		long startBitModifier = 0L;
+		for(Record record: records) {
+			Payload payload = record.getPayload();	
+			if(payload!=null&& payload.getPayloadType() == PayloadType.DDS) {
+				writeDDS(payload, payload.getStartBit()-startBitModifier,dataIn);
+				startBitModifier = payload.getStartBit() + payload.getLength();
+			}
+		}
+		dataIn.close();	
+	}
+	
 	private File getSourceFile() {
 		return sourceFile;
 	}

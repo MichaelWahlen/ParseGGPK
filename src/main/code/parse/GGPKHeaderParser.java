@@ -8,26 +8,16 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
-
-import main.code.record.Payload;
-import main.code.record.PayloadType;
 import main.code.record.Record;
 import main.code.record.RecordType;
 import main.code.utilities.StringUtilities;
 
-public class ParseGGPK {	
+public class GGPKHeaderParser {	
 
 	private long markerLocation = 0;
 	private Map<Long, Record> records = new HashMap<Long, Record>();
 	private boolean hasRecordConsolePrinting = false;
-		
-	public Map<Long, Record> getRecords(){
-		return records;
-	}
-	
-	private long getMarkerLocation() {
-		return markerLocation;
-	}
+	private GGPKPayloadParser payloadParser = new GGPKPayloadParser();
 		
 	/**
 	 * Increases the location of the position marker in the binary file, by the amount of processed bytes. <br>
@@ -72,7 +62,7 @@ public class ParseGGPK {
 	 * @param record the record that needs to be added to the set of identified records in the parsed binary file.
 	 */
 	private void addToRecords(Record record) {
-		records.put(record.getStartMarker(), record);
+		records.put(record.getStartBit(), record);
 		if(hasRecordConsolePrinting) {
 			record.printToConsole();			
 		}		
@@ -117,7 +107,8 @@ public class ParseGGPK {
 	 * 32 bytes containing a hash of something. <br>
 	 * 2*(n-1) bytes (depending on length n of file name) containing the name of the file. Reason for the additional length is use of spaces in between characters. <br>
 	 * 2 bytes for a null terminator (separator). <br>
-	 * x-8-32-2-2*(n-1)-4 bytes for the payload. This is calculated as the expected length of the record minus the bytes used for meta data (i.e. hash, separator, etc)
+	 * x-8-32-2-2*(n-1)-4 bytes for the pay-load. This is calculated as the expected length of the record minus the bytes used for meta data (i.e. hash, separator, etc)
+	 * Handling of the pay-load is left to a handler specific for this functionality.
 	 * @param record the custom record class used to contain record related information
 	 * @param dataIn the data stream that contains the data
 	 * @throws IOException thrown if file cannot be accessed
@@ -131,15 +122,12 @@ public class ParseGGPK {
 		record.lockHeaderSize();
 		switch(StringUtilities.findExtension(record.getName(),'.').toLowerCase()) {
 			case ".dds":
-				Payload payload = new Payload();
-				payload.setPayloadType(PayloadType.DDS);
-				payload.setByteOrder(ByteOrder.LITTLE_ENDIAN);
-				// here a lot of the functionality of the payload processing needs to come. It needs to be determined if the payload is a reference or a payload. If a payload, then whether or not it is compressed or not.
-				record.setPayload(payload);
+				payloadParser.processDDS(record, dataIn);
+				moveBytes(record,record.getLength()-record.getHeaderSize());
 				break;
-			default:		 
-		}
-		skipBytes(record,dataIn,record.getLength()-8-4-32-2*(lengthOfName-1)-2);
+			default:	
+				skipBytes(record,dataIn,record.getLength()-record.getHeaderSize());
+		}	
 	}
 	
 	/**
@@ -211,4 +199,11 @@ public class ParseGGPK {
 		} 
 	}
 	
+	public Map<Long, Record> getRecords(){
+		return records;
+	}
+	
+	private long getMarkerLocation() {
+		return markerLocation;
+	}
 }
